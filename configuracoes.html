@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações do Livro</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#f4f4f4; }
+header { background:#444; color:white; padding:15px; text-align:center; font-size:22px; }
+main { display:flex; justify-content:center; padding:30px; }
+.config-container { background:white; padding:25px; border-radius:12px; width:500px; box-shadow:0 0 10px rgba(0,0,0,0.2); }
+h2 { text-align:center; margin-bottom:20px; color:#333; }
+label { display:block; margin-top:12px; font-weight:bold; color:#555; }
+input, textarea { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:6px; }
+button { margin-top:20px; padding:12px; border:none; border-radius:6px; cursor:pointer; font-size:16px; }
+.salvar { background:#28a745; color:white; }
+.voltar { background:#007bff; color:white; margin-top:10px; }
+</style>
+</head>
+<body>
+<header>⚙ Configurações do Livro ⚙</header>
+<main>
+  <div class="config-container">
+    <h2>Editar Dados</h2>
+    <form id="formConfig">
+      <label for="titulo">Título:</label>
+      <input type="text" id="titulo" name="titulo" required>
+
+      <label for="autor">Autor:</label>
+      <input type="text" id="autor" name="autor" required>
+
+      <label for="capitulos">Capítulos:</label>
+      <textarea id="capitulos" name="capitulos"></textarea>
+
+      <label for="notas">Notas do Autor:</label>
+      <textarea id="notas" name="notas"></textarea>
+
+      <button type="submit" class="salvar">Salvar Alterações</button>
+    </form>
+    <button class="voltar" onclick="window.location.href='terceiro.html'">⬅ Voltar</button>
+  </div>
+</main>
+
+<script>
+// Usuário logado
+const usuarioLogado = localStorage.getItem("usuarioLogado");
+if (!usuarioLogado) {
+  window.location.href = "index.html";
+}
+
+let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
+
+// Preencher os campos com os dados já salvos
+window.addEventListener("DOMContentLoaded", function() {
+  const dadosLivro = usuarios[usuarioLogado]?.dadosLivro || {};
+  if(dadosLivro.titulo) document.getElementById("titulo").value = dadosLivro.titulo;
+  if(dadosLivro.autor) document.getElementById("autor").value = dadosLivro.autor;
+  if(dadosLivro.capitulos) document.getElementById("capitulos").value = dadosLivro.capitulos;
+  if(dadosLivro.notas) document.getElementById("notas").value = dadosLivro.notas;
+});
+
+// Salvar alterações
+const form = document.getElementById("formConfig");
+form.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const titulo = document.getElementById("titulo").value;
+  const autor = document.getElementById("autor").value;
+  const capitulos = document.getElementById("capitulos").value;
+  const notas = document.getElementById("notas").value;
+
+  usuarios[usuarioLogado].dadosLivro = { titulo, autor, capitulos, notas };
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+  alert("✅ Alterações salvas com sucesso!");
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil de Mundo - Mundo dos Livros</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #F4A261;
+  margin: 20px;
+}
+header {
+  background-color: #5B7DA3;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  font-size: 24px;
+  border-radius: 10px;
+  position: relative;
+  margin-bottom: 20px;
+}
+header a {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+}
+.blocos {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.bloco {
+  background: #fff8dc;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.bloco-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor:pointer;
+}
+.bloco-header span { flex-grow: 1; }
+.bloco-header button {
+  background: #ff9933;
+  border: none;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+.bloco-header button:hover { background-color: #cc7a29; }
+.bloco-content {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.bloco-content input, .bloco-content textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255,255,255,0.8);
+  resize: vertical;
+}
+.bloco-content img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin-top: 5px;
+  max-height: 150px;
+}
+button {
+  margin-top: 20px;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: none;
+  background: #001f3f;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right:10px;
+}
+button:hover { background: #004080; }
+#listaMundos { margin-top:10px; display:none; flex-direction: column; gap:8px; }
+.listaItem { background:#ffdb99; padding:6px 10px; border-radius:6px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="inicio.html">← Voltar</a>
+  Perfil de Mundo
+</header>
+
+<div class="blocos" id="blocosContainer"></div>
+<button id="novoBloco">+ Novo Mundo</button>
+<button id="verMundos">Abrir Mundos Salvos</button>
+<div id="listaMundos"></div>
+
+<script>
+const blocosContainer = document.getElementById("blocosContainer");
+const listaMundosDiv = document.getElementById("listaMundos");
+let mundos = JSON.parse(localStorage.getItem("mundos")) || [];
+
+// Salva apenas mundos com nome
+function salvarMundos() {
+  const filtrados = mundos.filter(m => m.nome && m.nome.trim() !== '');
+  localStorage.setItem("mundos", JSON.stringify(filtrados));
+  mundos = filtrados; // remove qualquer mundo sem nome da memória também
+}
+
+// Cria o bloco visual
+function criarBlocoVisual(mundo) {
+  const div = document.createElement("div");
+  div.className = "bloco";
+  div.dataset.id = mundo.id;
+
+  div.innerHTML = `
+    <div class="bloco-header">
+      <span>${mundo.nome || 'Novo Mundo'}</span>
+      <div>
+        <button class="toggleBtn">+</button>
+        <button class="removerBtn">X</button>
+      </div>
+    </div>
+    <div class="bloco-content">
+      <input type="text" placeholder="Nome do Mundo" value="${mundo.nome || ''}">
+      <textarea placeholder="Continentes">${mundo.continente || ''}</textarea>
+      <textarea placeholder="Capitais">${mundo.capitais || ''}</textarea>
+      <textarea placeholder="Cultura / Sociedade">${mundo.cultura || ''}</textarea>
+      <textarea placeholder="Clima e Geografia">${mundo.clima || ''}</textarea>
+      <textarea placeholder="História">${mundo.historia || ''}</textarea>
+      <input type="file" accept="image/*">
+      <img src="${mundo.mapa || ''}" alt="">
+    </div>
+  `;
+
+  const toggleBtn = div.querySelector(".toggleBtn");
+  const content = div.querySelector(".bloco-content");
+  toggleBtn.addEventListener("click", () => {
+    const aberto = content.style.display === "flex";
+    content.style.display = aberto ? "none" : "flex";
+    toggleBtn.textContent = aberto ? "+" : "–";
+  });
+
+  div.querySelector(".removerBtn").addEventListener("click", e => {
+    e.stopPropagation();
+    div.remove();
+    mundos = mundos.filter(m => m.id !== mundo.id);
+    salvarMundos();
+  });
+
+  const inputs = div.querySelectorAll("input[type=text], textarea");
+  inputs.forEach(input => {
+    input.addEventListener("input", () => {
+      mundo.nome = div.querySelector("input[placeholder='Nome do Mundo']").value.trim();
+      mundo.continente = div.querySelector("textarea[placeholder='Continentes']").value.trim();
+      mundo.capitais = div.querySelector("textarea[placeholder='Capitais']").value.trim();
+      mundo.cultura = div.querySelector("textarea[placeholder='Cultura / Sociedade']").value.trim();
+      mundo.clima = div.querySelector("textarea[placeholder='Clima e Geografia']").value.trim();
+      mundo.historia = div.querySelector("textarea[placeholder='História']").value.trim();
+      div.querySelector(".bloco-header span").textContent = mundo.nome || "Novo Mundo";
+
+      // Salva somente se o mundo tiver nome
+      if(mundo.nome) {
+        if(!mundos.find(m => m.id === mundo.id)) mundos.push(mundo);
+        salvarMundos();
+      }
+    });
+  });
+
+  const fileInput = div.querySelector("input[type=file]");
+  const img = div.querySelector("img");
+  fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = ev => {
+        img.src = ev.target.result;
+        mundo.mapa = ev.target.result;
+        if(mundo.nome && !mundos.find(m => m.id === mundo.id)) mundos.push(mundo);
+        salvarMundos();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  blocosContainer.appendChild(div);
+}
+
+// Botão "+ Novo Mundo"
+document.getElementById("novoBloco").addEventListener("click", () => {
+  const novoMundo = {
+    id: Date.now(),
+    nome:'',
+    continente:'',
+    capitais:'',
+    cultura:'',
+    clima:'',
+    historia:'',
+    mapa:''
+  };
+  criarBlocoVisual(novoMundo);
+});
+
+// Botão "Abrir Mundos Salvos"
+document.getElementById("verMundos").addEventListener("click", () => {
+  listaMundosDiv.innerHTML = '';
+  listaMundosDiv.style.display = listaMundosDiv.style.display === 'flex' ? 'none' : 'flex';
+  mundos.filter(m => m.nome && m.nome.trim() !== '').forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'listaItem';
+    item.textContent = m.nome;
+    item.addEventListener('click', () => {
+      // Evita duplicar blocos já abertos
+      if(!document.querySelector(`.bloco[data-id='${m.id}']`)) criarBlocoVisual(m);
+    });
+    listaMundosDiv.appendChild(item);
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Escritor</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #5B7DA3;
+  }
+
+  nav {
+    background-color:#F4A261;
+    color: white;
+    width: 220px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  nav h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 6px;
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  nav a:hover, nav a.active {
+    background-color: #004080;
+  }
+
+  main {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .secao {
+    display: none;
+    background: rgba(255,255,255,0.85);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 8px rgba(0,0,0,0.2);
+    max-width: 700px;
+    margin: auto;
+    text-align: center;
+  }
+
+  .secao h3 {
+    margin-top: 0;
+    color: #001f3f;
+  }
+
+  .secao p {
+    margin-bottom: 10px;
+  }
+
+  .secao img {
+    width: 100%;
+    max-width: 600px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    margin: 15px 0;
+  }
+
+  .folha {
+  position: fixed;
+  top: -50px;
+  width: 20px;
+  height: 20px;
+  background: orange;
+  border-radius: 50% 50% 50% 0;
+  opacity: 0.8;
+  pointer-events: none;
+  animation: cair linear infinite;
+  z-index: 1;
+  }
+
+  @keyframes cair {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(110vh) rotate(360deg); }
+  }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <h2>Menu</h2>
+  <a href="Inicio.html">Página Inicial</a>
+  <a href="anotações.html">Anotações</a>
+  <a href="reclmações.html">Reclamações</a>
+  <a href="configuracoes.html">Configurações</a>
+</nav>
+
+<main>
+  <div id="pagina" class="secao">
+    <h3>Inicio</h3>
+    <p>Aqui, cada escritor encontra ferramentas para escrever seu livro e abrir portas para seu universo.</p>
+	<p>Um lugar onde sua imaginação ganha vida e seu livro encontra seu próprio mundo.”</p>
+    <img src="https://th.bing.com/th/id/R.1fa54df7978a672d8e49ed119fd8c844?rik=ASLBotlwpLtZrQ&riu=http%3a%2f%2fweb.tecnico.ulisboa.pt%2f%7eist187123%2fwordpress%2fwp-content%2fuploads%2f2016%2f10%2fera-uma-vez-joao-thumb-800x500-143974.jpg&ehk=8q2X%2bwyvD%2bWVdKHthWeNLk38JZxqElEf0kWDFJgS8pw%3d&risl=&pid=ImgRaw&r=0" alt="História">
+    <p>“Escrever é plantar palavras no silêncio do papel, cultivando mundos que só a imaginação pode colher.”</p>
+  </div>
+
+  <div id="configuracoes" class="secao">
+    <h3>Configurações</h3>
+    <label for="tituloInput">Título do Livro:</label>
+    <input type="text" id="tituloInput">
+
+    <label for="autorInput">Nome do Escritor:</label>
+    <input type="text" id="autorInput">
+
+    <label for="arquivoInput">Arquivo do Livro:</label>
+    <input type="text" id="arquivoInput" placeholder="Nome do arquivo">
+
+    <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
+  </div>
+</main>
+
+<script>
+const usuarioLogado = localStorage.getItem("usuarioLogado");
+if (!usuarioLogado) {
+  window.location.href = "index.html";
+}
+
+// Recupera os dados do usuário logado
+let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
+let dadosLivro = usuarios[usuarioLogado]?.dadosLivro || { titulo: "Sem título", autor: "Autor desconhecido", arquivo: "" };
+
+document.getElementById("tituloInput").value = dadosLivro.titulo;
+document.getElementById("autorInput").value = dadosLivro.autor;
+document.getElementById("arquivoInput").value = dadosLivro.arquivo;
+
+// Inicializa com a seção principal aberta
+mostrarSecao('pagina');
+
+// Cria folhas de outono
+for(let i=0; i<10; i++){
+  let folha = document.createElement('div');
+  folha.className = 'folha';
+  folha.style.left = Math.random() * 100 + 'vw';
+  folha.style.animationDuration = 5 + Math.random()*5 + 's';
+  folha.style.animationDelay = Math.random()*5 + 's';
+  document.body.appendChild(folha);
+}
+
+function mostrarSecao(secao) {
+  document.querySelectorAll(".secao").forEach(s => s.style.display = "none");
+  document.getElementById(secao).style.display = "block";
+}
+
+// Salva configurações atualizadas
+function salvarConfiguracoes() {
+  dadosLivro.titulo = document.getElementById("tituloInput").value;
+  dadosLivro.autor = document.getElementById("autorInput").value;
+  dadosLivro.arquivo = document.getElementById("arquivoInput").value;
+
+  usuarios[usuarioLogado].dadosLivro = dadosLivro;
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+  alert("Configurações salvas!");
+  mostrarSecao('configuracoes');
+}
+</script>
+
+</body>
+</html>

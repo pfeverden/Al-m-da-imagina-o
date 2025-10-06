@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mundo dos Livros</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: #F4A261;
+    overflow: hidden;
+  }
+
+  header {
+    background-color: #5B7DA3;
+    padding: 25px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 10;
+    position: relative;
+  }
+
+  nav {
+    display: flex;
+    justify-content: center;
+    background: #001f3f;
+    padding: 10px 0;
+  }
+
+  nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: 0.3s;
+  }
+
+  nav a:hover {
+    background-color: #004080;
+  }
+
+  main {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 20px;
+    text-align: center;
+    position: relative;
+  }
+
+  button#entrarPainel {
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    background: #001f3f;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+
+  button#entrarPainel:hover {
+    background: #004080;
+  }
+
+  .folha {
+    position: fixed;
+    top: -50px;
+    width: 20px;
+    height: 20px;
+    background: url('folha.png') no-repeat center/contain;
+    opacity: 0.8;
+    pointer-events: none;
+    animation: cair linear infinite;
+  }
+
+  @keyframes cair {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(110vh) rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<header>❃ Mundo dos Livros ❃</header>
+
+<nav>
+  <a href="linhadotempo.html">Linha do Tempo</a>
+  <a href="personagem.html">Personagens</a>
+  <a href="escreva.html">Escreva</a>
+  <a href="mundo.html">Mundo</a>
+  <a href="#">Ajuda</a>
+</nav>
+
+<main>
+  <h2 id="bemVindo">Bem-vindo, Escritor!</h2>
+  <p id="livroInfo"></p>
+  <button id="entrarPainel">Voltar no Painel</button>
+</main>
+
+<script>
+  // Recupera usuário logado
+  const usuarioLogado = localStorage.getItem("usuarioLogado");
+  let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
+
+  const livroInfoEl = document.getElementById("livroInfo");
+  const bemVindoEl = document.getElementById("bemVindo");
+
+  if (usuarioLogado && usuarios[usuarioLogado]?.dadosLivro) {
+    const { titulo, autor, capitulos, notas } = usuarios[usuarioLogado].dadosLivro;
+
+    bemVindoEl.textContent = `Bem-vindo, ${autor || "Escritor"}!`;
+
+    livroInfoEl.innerHTML = `
+      <strong>Título:</strong> ${titulo || "Não informado"} <br>
+      <strong>Autor:</strong> ${autor || "Não informado"} <br>
+      <strong>Notas:</strong> ${notas || "Sem anotações"} <br>
+    `;
+  } else {
+    livroInfoEl.textContent = "Nenhum livro cadastrado ainda. Vá para configurações!";
+  }
+
+  // Botão voltar para o painel
+  document.getElementById("entrarPainel").addEventListener("click", () => {
+    window.location.href = "terceiro.html"; // ← aqui está ajustado
+  });
+
+  // Folhas caindo
+  for(let i=0;i<30;i++){
+    const folha = document.createElement("div");
+    folha.classList.add("folha");
+    folha.style.left = Math.random() * 100 + "vw";
+    folha.style.animationDuration = (5 + Math.random()*5) + "s";
+    folha.style.animationDelay = Math.random()*5 + "s";
+    document.body.appendChild(folha);
+  }
+</script>
+
+</body>
+</html>

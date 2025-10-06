@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reclamações - Mundo dos Livros</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background: url('folhas-outono.jpg') no-repeat center center fixed;
+    background-size: cover;
+    padding: 20px;
+  }
+
+  header {
+    background-color: rgba(255, 228, 196, 0.9);
+    text-align: center;
+    padding: 20px;
+    font-size: 26px;
+    font-weight: bold;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+  }
+
+  form {
+    max-width: 600px;
+    margin: auto;
+    background: rgba(255,248,220,0.9);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+  }
+
+  textarea {
+    resize: none;
+    height: 150px;
+  }
+
+  button {
+    margin-top: 15px;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    background: #001f3f;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #004080;
+  }
+
+  p#sucesso {
+    margin-top: 15px;
+    color: green;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+<a href="terceiro.html">← Voltar</a>
+<header>🍂 Reclamações</header>
+
+<form id="reclamacaoForm">
+  <label for="nome">Seu Nome:</label>
+  <input type="text" id="nome" required>
+
+  <label for="email">Seu Email:</label>
+  <input type="email" id="email" required>
+
+  <label for="mensagem">Mensagem:</label>
+  <textarea id="mensagem" placeholder="Escreva sua reclamação..." required></textarea>
+
+  <button type="submit">Enviar</button>
+  <p id="sucesso"></p>
+</form>
+
+<script>
+  const form = document.getElementById('reclamacaoForm');
+  const sucesso = document.getElementById('sucesso');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const mensagem = document.getElementById('mensagem').value;
+
+    // Monta email
+    const destinatario = "seuemail@dominio.com"; // substitua pelo seu email
+    const assunto = encodeURIComponent("Reclamação - Mundo dos Livros");
+    const corpo = encodeURIComponent(`Nome: ${nome}\nEmail: ${email}\nMensagem:\n${mensagem}`);
+
+    // Envia via mailto
+    window.location.href = `mailto:${destinatario}?subject=${assunto}&body=${corpo}`;
+
+    sucesso.textContent = "Sua reclamação foi preparada para envio! Verifique seu programa de email.";
+    form.reset();
+  });
+</script>
+
+</body>
+</html>

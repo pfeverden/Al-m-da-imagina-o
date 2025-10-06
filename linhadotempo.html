@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linha do Tempo</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background: #F4A261;
+    background-size: cover;
+    padding: 20px;
+  }
+
+  header {
+    background-color: #5B7DA3;
+    text-align: center;
+    padding: 20px;
+    font-size: 26px;
+    font-weight: bold;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+  }
+
+  #linhaDoTempo {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .evento {
+    background: rgba(255, 248, 220, 0.9);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .evento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .evento-header span {
+    font-weight: bold;
+  }
+
+  .evento-header button {
+    background-color: #ff9933;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.3s;
+  }
+
+  .evento-header button:hover {
+    background-color: #cc7a29;
+  }
+
+  .evento input, .evento textarea {
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.8);
+  }
+
+  .evento textarea {
+    resize: vertical;
+  }
+
+  button#novoEvento {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background: #001f3f;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  button#novoEvento:hover {
+    background: #004080;
+  }
+</style>
+</head>
+<body>
+<a href="inicio.html">← Voltar</a>
+<header>📖 Linha do Tempo</header>
+
+<div id="linhaDoTempo"></div>
+<button id="novoEvento">+ Novo Evento</button>
+
+<script>
+const container = document.getElementById('linhaDoTempo');
+const btnNovo = document.getElementById('novoEvento');
+
+let eventos = JSON.parse(localStorage.getItem('eventos')) || [];
+
+// Função para criar HTML do evento
+function criarEventoHTML(evento) {
+  const div = document.createElement('div');
+  div.className = 'evento';
+  div.dataset.id = evento.id;
+
+  div.innerHTML = `
+    <div class="evento-header">
+      <span>${evento.data || 'Sem data'}</span>
+      <button onclick="removerEvento(${evento.id})">X</button>
+    </div>
+    <input type="text" placeholder="Data do evento" value="${evento.data || ''}">
+    <textarea placeholder="Descrição do evento">${evento.descricao || ''}</textarea>
+  `;
+
+  const inputData = div.querySelector('input');
+  const textareaDesc = div.querySelector('textarea');
+
+  inputData.addEventListener('input', () => atualizarEvento(evento.id, inputData.value, textareaDesc.value));
+  textareaDesc.addEventListener('input', () => atualizarEvento(evento.id, inputData.value, textareaDesc.value));
+
+  container.appendChild(div);
+}
+
+// Criar novo evento
+function novoEvento() {
+  const evento = {id: Date.now(), data: '', descricao: ''};
+  eventos.push(evento);
+  salvarEventos();
+  criarEventoHTML(evento);
+}
+
+// Atualizar evento
+function atualizarEvento(id, data, descricao) {
+  const ev = eventos.find(e => e.id === id);
+  if(ev) {
+    ev.data = data;
+    ev.descricao = descricao;
+    salvarEventos();
+  }
+}
+
+// Remover evento
+function removerEvento(id) {
+  eventos = eventos.filter(e => e.id !== id);
+  salvarEventos();
+  const div = document.querySelector(`.evento[data-id='${id}']`);
+  if(div) div.remove();
+}
+
+// Salvar no localStorage
+function salvarEventos() {
+  localStorage.setItem('eventos', JSON.stringify(eventos));
+}
+
+// Inicializa
+eventos.forEach(ev => criarEventoHTML(ev));
+
+// Botão novo evento
+btnNovo.addEventListener('click', novoEvento);
+</script>
+
+</body>
+</html>

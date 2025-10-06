@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anotações - Mundo dos Livros</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background: url('folhas-outono.jpg') no-repeat center center fixed;
+    background-size: cover;
+    padding: 20px;
+  }
+  header {
+    background-color: rgba(255, 228, 196, 0.9);
+    text-align: center;
+    padding: 20px;
+    font-size: 26px;
+    font-weight: bold;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+  }
+  .blocos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  .bloco {
+    background: rgba(255, 248, 220, 0.9);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  .bloco textarea {
+    width: 100%;
+    height: 150px;
+    border: none;
+    resize: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    background: rgba(255,255,255,0.8);
+  }
+  .bloco textarea:focus {
+    outline: 2px solid #ff9933;
+  }
+  .bloco-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .bloco-header button {
+    background-color: #ff9933;
+    border: none;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.3s;
+  }
+  .bloco-header button:hover {
+    background-color: #cc7a29;
+  }
+  button#novoBloco {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background: #001f3f;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button#novoBloco:hover {
+    background: #004080;
+  }
+</style>
+</head>
+<body>
+<a href="terceiro.html">← Voltar</a>
+<header>🍂 Minhas Anotações</header>
+<div class="blocos" id="blocosContainer"></div>
+
+<button id="novoBloco">+ Novo Bloco</button>
+
+<script>
+const blocosContainer = document.getElementById("blocosContainer");
+const btnNovo = document.getElementById("novoBloco");
+
+// Recupera blocos do localStorage
+let blocos = JSON.parse(localStorage.getItem("blocos")) || [];
+
+// Função para criar o HTML de um bloco (não adiciona no array)
+function criarBlocoHTML(id, conteudo) {
+  const div = document.createElement("div");
+  div.className = "bloco";
+  div.dataset.id = id;
+
+  div.innerHTML = `
+    <div class="bloco-header">
+      <span>Bloco</span>
+      <button onclick="removerBloco(${id})">X</button>
+    </div>
+    <textarea placeholder="Escreva aqui...">${conteudo}</textarea>
+  `;
+
+  const textarea = div.querySelector("textarea");
+  textarea.addEventListener("input", () => atualizarBloco(id, textarea.value));
+
+  blocosContainer.appendChild(div);
+}
+
+// Função para criar um novo bloco
+function criarBloco(conteudo = "") {
+  const blocoId = Date.now();
+  blocos.push({id: blocoId, conteudo});
+  salvarBlocos();
+  criarBlocoHTML(blocoId, conteudo);
+}
+
+// Atualiza conteúdo do bloco
+function atualizarBloco(id, conteudo) {
+  const bloco = blocos.find(b => b.id === id);
+  if(bloco) {
+    bloco.conteudo = conteudo;
+    salvarBlocos();
+  }
+}
+
+// Remove bloco
+function removerBloco(id) {
+  blocos = blocos.filter(b => b.id !== id);
+  salvarBlocos();
+  const div = document.querySelector(`.bloco[data-id='${id}']`);
+  if(div) div.remove();
+}
+
+// Salvar no localStorage
+function salvarBlocos() {
+  localStorage.setItem("blocos", JSON.stringify(blocos));
+}
+
+// Inicializa blocos existentes
+blocos.forEach(b => criarBlocoHTML(b.id, b.conteudo));
+
+// Botão novo bloco
+btnNovo.addEventListener("click", () => criarBloco());
+</script>
+
+</body>
+</html>

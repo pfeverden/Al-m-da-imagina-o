@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil de Personagem - Mundo dos Livros</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background: #F4A261;
+    padding: 20px;
+  }
+
+  header {
+    background-color: #5B7DA3;
+    text-align: center;
+    padding: 20px;
+    font-size: 26px;
+    font-weight: bold;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  header a {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    text-decoration: none;
+    font-size: 24px;
+    color: #001f3f;
+  }
+
+  .personagem {
+    background: #fff8dc;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+
+  .personagem-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    background: #ff9933;
+    color: white;
+  }
+
+  .personagem-body {
+    display: none;
+    padding: 10px 15px;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    background: rgba(255,255,255,0.8);
+    resize: vertical;
+  }
+
+  img.foto-preview {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 5px;
+    object-fit: cover;
+    max-height: 150px;
+  }
+
+  button#novoBloco {
+    margin-top: 20px;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    background: #001f3f;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  button#novoBloco:hover {
+    background: #004080;
+  }
+
+  .removerBtn {
+    background-color: #cc3333;
+    border: none;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .removerBtn:hover {
+    background-color: #aa0000;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="inicio.html">⬅</a>
+  Perfil de Personagem
+</header>
+
+<div id="personagensContainer"></div>
+<button id="novoBloco">+ Novo Personagem</button>
+
+<script>
+let personagens = JSON.parse(localStorage.getItem("personagens")) || [];
+
+function salvarPersonagens() {
+  localStorage.setItem("personagens", JSON.stringify(personagens));
+}
+
+function criarPersonagem(p = null) {
+  const id = p?.id || Date.now();
+  if(!p) {
+    p = { 
+      id,
+      nome:'',
+      apelido:'',
+      animal:'',
+      personalidade:'',
+      movimento:'',
+      cidade:'',
+      parente:'',
+      foto:'',
+      livro:'' // correção: inicializa livro
+    };
+    personagens.push(p);
+    salvarPersonagens();
+  }
+
+  const container = document.getElementById("personagensContainer");
+  const div = document.createElement("div");
+  div.className = "personagem";
+  div.dataset.id = id;
+
+  div.innerHTML = `
+    <div class="personagem-header">
+      <span>${p.nome || 'Novo Personagem'}</span>
+      <span class="toggle">+</span>
+    </div>
+    <div class="personagem-body">
+      <button class="removerBtn">Remover</button>
+      <textarea placeholder="Nome do livro">${p.livro}</textarea>
+      <input type="text" placeholder="Nome" value="${p.nome}">
+      <input type="text" placeholder="Apelido" value="${p.apelido}">
+      <input type="text" placeholder="Animal de Estimação" value="${p.animal}">
+      <textarea placeholder="Personalidade">${p.personalidade}</textarea>
+      <textarea placeholder="Movimento ou hábito engraçado">${p.movimento}</textarea>
+      <textarea placeholder="Cidade natal">${p.cidade}</textarea>
+      <textarea placeholder="Mais algum parente?">${p.parente}</textarea>
+      <input type="file" accept="image/*">
+      <img class="foto-preview" src="${p.foto}" alt="">
+    </div>
+  `;
+
+  const header = div.querySelector(".personagem-header");
+  const body = div.querySelector(".personagem-body");
+  const toggle = div.querySelector(".toggle");
+
+  header.addEventListener("click", () => {
+    if(body.style.display === "flex") {
+      body.style.display = "none";
+      toggle.textContent = "+";
+    } else {
+      body.style.display = "flex";
+      toggle.textContent = "–";
+    }
+  });
+
+  div.querySelector(".removerBtn").addEventListener("click", e => {
+    e.stopPropagation();
+    personagens = personagens.filter(per => per.id !== id);
+    salvarPersonagens();
+    div.remove();
+  });
+
+  const inputs = div.querySelectorAll("input[type=text], textarea");
+  inputs.forEach(input => input.addEventListener("input", () => {
+    p.livro = div.querySelector("textarea[placeholder='Nome do livro']").value;
+    p.nome = div.querySelector("input[placeholder='Nome']").value;
+    p.apelido = div.querySelector("input[placeholder='Apelido']").value;
+    p.animal = div.querySelector("input[placeholder='Animal de Estimação']").value;
+    p.personalidade = div.querySelector("textarea[placeholder='Personalidade']").value;
+    p.movimento = div.querySelector("textarea[placeholder='Movimento ou hábito engraçado']").value;
+    p.cidade = div.querySelector("textarea[placeholder='Cidade natal']").value;
+    p.parente = div.querySelector("textarea[placeholder='Mais algum parente?']").value;
+    header.querySelector("span").textContent = p.nome || 'Novo Personagem';
+    salvarPersonagens();
+  }));
+
+  const fileInput = div.querySelector("input[type=file]");
+  const imgPreview = div.querySelector("img.foto-preview");
+  fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = ev => {
+        imgPreview.src = ev.target.result;
+        p.foto = ev.target.result;
+        salvarPersonagens();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  container.appendChild(div);
+}
+
+// Inicializa
+personagens.forEach(p => criarPersonagem(p));
+
+document.getElementById("novoBloco").addEventListener("click", () => criarPersonagem());
+</script>
+
+</body>
+</html>

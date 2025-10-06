@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organize seu Livro</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; height:100vh; display:flex; flex-direction:column; }
+header { background-color: beige; padding:20px; text-align:center; font-size:26px; font-weight:bold; color:#333; }
+main { flex:1; background-color:#001f3f; display:flex; justify-content:center; align-items:flex-start; padding-top:50px; }
+.organizador-container { background:white; padding:30px; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:500px; }
+h2 { margin-bottom:20px; color:#333; text-align:center; }
+label { display:block; margin-top:10px; font-weight:bold; color:#444; }
+input, textarea { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; }
+textarea { resize:none; height:100px; }
+button { margin-top:15px; background:#4CAF50; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; transition:0.3s; font-size:16px; }
+button:hover { background:#45a049; }
+</style>
+</head>
+<body>
+<header> ⚜Organize seu livro aqui⚜</header>
+<main>
+<div class="organizador-container">
+  <h2>Cadastro da Obra</h2>
+  <form id="formOrganizador">
+    <label for="titulo">Título:</label>
+    <input type="text" id="titulo" name="titulo" placeholder="Digite o título do livro" required>
+
+    <label for="autor">Autor:</label>
+    <input type="text" id="autor" name="autor" placeholder="Digite seu nome ou pseudônimo" required>
+
+    <label for="capitulos">Capítulos:</label>
+    <textarea id="capitulos" name="capitulos" placeholder="Liste ou descreva os capítulos"></textarea>
+
+    <label for="notas">Notas do Autor:</label>
+    <textarea id="notas" name="notas" placeholder="Coloque suas anotações ou ideias"></textarea>
+
+    <label for="arquivo">Arquivo do Livro:</label>
+    <input type="file" id="arquivo" name="arquivo" accept=".pdf,.epub,.txt">
+
+    <button type="submit">Salvar Organização</button>
+  </form>
+</div>
+</main>
+
+<script>
+// Usuário logado
+const usuarioLogado = localStorage.getItem("usuarioLogado");
+if (!usuarioLogado) {
+  // Se não tiver usuário logado, volta pro login
+  window.location.href = "index.html";
+}
+
+// Carrega usuários
+let usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
+
+// Se já tiver título e autor, vai direto para a terceira página
+if (usuarios[usuarioLogado]?.dadosLivro.titulo && usuarios[usuarioLogado]?.dadosLivro.autor) {
+  window.location.href = "terceiro.html";
+}
+
+// Preenche campos com dados existentes
+window.addEventListener("DOMContentLoaded", function() {
+  const dadosLivro = usuarios[usuarioLogado]?.dadosLivro || {};
+  if(dadosLivro.titulo) document.getElementById("titulo").value = dadosLivro.titulo;
+  if(dadosLivro.autor) document.getElementById("autor").value = dadosLivro.autor;
+  if(dadosLivro.capitulos) document.getElementById("capitulos").value = dadosLivro.capitulos;
+  if(dadosLivro.notas) document.getElementById("notas").value = dadosLivro.notas;
+});
+
+// Salva dados e vai para a terceira página
+const form = document.getElementById("formOrganizador");
+form.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const titulo = document.getElementById("titulo").value;
+  const autor = document.getElementById("autor").value;
+  const capitulos = document.getElementById("capitulos").value;
+  const notas = document.getElementById("notas").value;
+  const arquivo = document.getElementById("arquivo").files[0];
+
+  usuarios[usuarioLogado].dadosLivro = { titulo, autor, capitulos, notas };
+  if(arquivo) usuarios[usuarioLogado].dadosLivro.arquivo = arquivo.name;
+
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+  // Vai direto para a terceira página
+  window.location.href = "terceiro.html";
+});
+</script>
+</body>
+</html>

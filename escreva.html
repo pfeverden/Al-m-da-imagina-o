@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mini WordPad — Salva automático</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --panel:#fff; --accent:#2b6cb0; --muted:#666;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:#111}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--accent);color:white}
+  header h1{font-size:16px;margin:0}
+  .app{display:flex;height:calc(100vh - 54px)}
+  /* barra lateral de documentos */
+  .sidebar{width:290px;background:#fff;padding:12px;border-right:1px solid #e6e6e6;overflow:auto}
+  .sidebar .actions{display:flex;gap:8px;margin-bottom:10px}
+  .btn{background:var(--accent);color:white;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(43,108,176,.15)}
+  .docs{display:flex;flex-direction:column;gap:8px}
+  .docItem{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;background:#fff;border:1px solid #f0f0f0;cursor:pointer}
+  .docItem:hover{box-shadow:0 2px 6px rgba(0,0,0,.05)}
+  .docTitle{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding-right:10px}
+  .docActions{display:flex;gap:6px;flex-shrink:0}
+  .iconBtn{width:28px;height:28px;border-radius:6px;border:none;background:#f5f5f5;cursor:pointer}
+  .trash{margin-top:12px;padding-top:12px;border-top:1px dashed #e6e6e6}
+  /* editor */
+  .editorWrap{flex:1;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);padding:10px;border-radius:8px;border:1px solid #e8e8e8}
+  .toolbar select,.toolbar input[type="number"]{padding:6px;border-radius:6px;border:1px solid #ddd}
+  .toolbar button{padding:6px 8px;border-radius:6px;border:1px solid #ddd;background:white;cursor:pointer}
+  .toolbar button.active{background:linear-gradient(180deg,#e6f2ff,#d6eaff);border-color:var(--accent);color:var(--accent)}
+  #editor{flex:1;padding:18px;border-radius:8px;background:#fff;border:1px solid #e6e6e6;overflow:auto;min-height:60vh}
+  #editor:focus{outline:3px solid rgba(43,108,176,.08)}
+  footer{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;padding:8px 12px}
+  .small{font-size:12px;color:#777}
+  /* confirmação modal simples */
+  .modal{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:50}
+  .modalCard{background:#fff;padding:18px;border-radius:8px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  @media (max-width:760px){ .sidebar{display:none} .app{flex-direction:column} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mini WordPad — Salva automático</h1>
+  <nav>
+  <a href="inicio.html">Inicio</a>
+  </nav>
+  <div class="small">Feito pra não perder suas histórias</div>
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="actions">
+      <button id="newDoc" class="btn">+ Nova folha</button>
+      <button id="toggleTrash" class="btn ghost">Lixeira</button>
+    </div>
+
+    <div class="docs" id="docList" aria-live="polite"></div>
+
+    <div class="trash" id="trashArea" style="display:none">
+      <h4 style="margin:0 0 8px 0">Lixeira</h4>
+      <div id="trashList"></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="emptyTrash" class="btn ghost">Esvaziar lixeira</button>
+      </div>
+    </div>
+  </aside>
+
+  <section class="editorWrap">
+    <div class="toolbar" role="toolbar" aria-label="Ferramentas de formatação">
+      <button data-cmd="bold" title="Negrito (Ctrl+B)"><b>B</b></button>
+      <button data-cmd="italic" title="Itálico (Ctrl+I)"><i>I</i></button>
+      <button data-cmd="underline" title="Sublinhado (Ctrl+U)"><u>U</u></button>
+
+      <div style="width:1px;background:#eee;height:24px;margin:0 8px"></div>
+
+      <button data-cmd="justifyLeft" title="Alinhar à esquerda">Esq</button>
+      <button data-cmd="justifyCenter" title="Centralizar">C</button>
+      <button data-cmd="justifyRight" title="Alinhar à direita">Dir</button>
+      <button data-cmd="justifyFull" title="Justificar">Just</button>
+
+      <div style="width:1px;background:#eee;height:24px;margin:0 8px"></div>
+
+      <label style="display:flex;align-items:center;gap:6px">
+        Fonte:
+        <select id="fontSize">
+          <option value="3">12pt (Normal)</option>
+          <option value="4">14pt</option>
+          <option value="5">18pt</option>
+          <option value="6">24pt</option>
+        </select>
+      </label>
+
+      <div style="flex:1"></div>
+
+      <button id="saveBtn" class="btn ghost" title="Salvar agora">Salvar</button>
+      <button id="downloadBtn" class="btn" title="Baixar HTML">Baixar</button>
+    </div>
+
+    <div id="editor" contenteditable="true" spellcheck="true" aria-label="Área de edição">
+      <p>Comece a escrever aqui...</p>
+    </div>
+
+    <footer>
+      <div class="small" id="status">Nenhum documento selecionado</div>
+      <div class="small" id="autoSave">Salvando automaticamente…</div>
+    </footer>
+  </section>
+</div>
+
+<!-- modal de confirmação -->
+<div id="confirmModal" style="display:none" class="modal" aria-hidden="true">
+  <div class="modalCard">
+    <p id="confirmText">Tem certeza?</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="confirmCancel" class="btn ghost">Cancelar</button>
+      <button id="confirmOk" class="btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  Mini WordPad-like editor
+  - documentos salvos em localStorage ("wp_docs") e lixeira ("wp_trash")
+  - criar nova folha, renomear, abrir, excluir para lixeira, restaurar
+  - formatação via document.execCommand (simples e compatível para este uso)
+  - auto-save a cada alteração e antes de fechar a aba
+*/
+
+const STORAGE_KEY = "wp_docs_v1";
+const TRASH_KEY = "wp_trash_v1";
+
+let docs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+let trash = JSON.parse(localStorage.getItem(TRASH_KEY) || "[]");
+let current = null; // id do documento aberto
+
+// elementos
+const docList = document.getElementById("docList");
+const trashArea = document.getElementById("trashArea");
+const trashList = document.getElementById("trashList");
+const newDocBtn = document.getElementById("newDoc");
+const toggleTrashBtn = document.getElementById("toggleTrash");
+const editor = document.getElementById("editor");
+const fontSizeSelect = document.getElementById("fontSize");
+const saveBtn = document.getElementById("saveBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const status = document.getElementById("status");
+const autoSave = document.getElementById("autoSave");
+
+// modal confirm
+const confirmModal = document.getElementById("confirmModal");
+const confirmText = document.getElementById("confirmText");
+const confirmCancel = document.getElementById("confirmCancel");
+const confirmOk = document.getElementById("confirmOk");
+let confirmResolve = null;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8) }
+
+function saveAll(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+  localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
+  autoSave.textContent = "Salvo em " + new Date().toLocaleTimeString();
+  setTimeout(()=>{ autoSave.textContent = "Salvando automaticamente…"; }, 1500);
+}
+
+function createDoc(title="Sem título", content="<p></p>"){
+  const d = { id: uid(), titulo: title, conteudo: content, created: Date.now() };
+  docs.unshift(d);
+  current = d.id;
+  renderDocs();
+  openDocById(d.id);
+  saveAll();
+}
+
+function renderDocs(){
+  docList.innerHTML = "";
+  docs.forEach(doc=>{
+    const el = document.createElement("div");
+    el.className = "docItem";
+    // título (clicável)
+    const title = document.createElement("div");
+    title.className = "docTitle";
+    title.textContent = doc.titulo;
+    title.title = doc.titulo;
+    title.addEventListener("click", ()=> openDocById(doc.id) );
+    // renomear com dblclick
+    title.addEventListener("dblclick", (e)=>{
+      e.stopPropagation();
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = doc.titulo;
+      input.className = "rename";
+      input.style.width = "100%";
+      input.addEventListener("keydown", ev=>{
+        if(ev.key==="Enter") input.blur();
+      });
+      input.addEventListener("blur", ()=>{
+        doc.titulo = input.value.trim() || "Sem título";
+        saveAll();
+        renderDocs();
+      });
+      title.replaceWith(input);
+      input.focus();
+    });
+
+    // ações à direita
+    const actions = document.createElement("div");
+    actions.className = "docActions";
+
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "iconBtn";
+    btnDelete.title = "Excluir (vai para a lixeira)";
+    btnDelete.textContent = "🗑";
+    btnDelete.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      confirm("Mover '" + doc.titulo + "' para a lixeira?").then(ok=>{
+        if(!ok) return;
+        trash.unshift(doc);
+        docs = docs.filter(d=>d.id!==doc.id);
+        if(current === doc.id){
+          current = null; editor.innerHTML = "<p></p>";
+          status.textContent = "Nenhum documento selecionado";
+        }
+        saveAll();
+        renderDocs(); renderTrash();
+      });
+    });
+
+    const btnOpen = document.createElement("button");
+    btnOpen.className = "iconBtn";
+    btnOpen.title = "Abrir";
+    btnOpen.textContent = "📄";
+    btnOpen.addEventListener("click", (e)=>{
+      e.stopPropagation(); openDocById(doc.id);
+    });
+
+    actions.appendChild(btnOpen);
+    actions.appendChild(btnDelete);
+
+    el.appendChild(title);
+    el.appendChild(actions);
+    docList.appendChild(el);
+  });
+
+  // se não houver docs, mostra um chamado
+  if(docs.length === 0){
+    const hint = document.createElement("div");
+    hint.style.color="#777"; hint.style.fontSize="13px";
+    hint.style.padding="8px"; hint.textContent = "Nenhuma folha. Clique em '+ Nova folha' para começar.";
+    docList.appendChild(hint);
+  }
+}
+
+function renderTrash(){
+  trashList.innerHTML = "";
+  trash.forEach(item=>{
+    const d = document.createElement("div");
+    d.style.display = "flex"; d.style.justifyContent="space-between"; d.style.alignItems="center";
+    d.style.padding = "6px 8px"; d.style.borderRadius="6px"; d.style.marginBottom="6px"; d.style.background="#fff";
+    const t = document.createElement("div"); t.textContent = item.titulo;
+    const actions = document.createElement("div");
+    const btnRestore = document.createElement("button"); btnRestore.className="iconBtn"; btnRestore.textContent="↩"; btnRestore.title="Restaurar";
+    btnRestore.addEventListener("click", ()=>{ docs.unshift(item); trash = trash.filter(x=>x.id!==item.id); saveAll(); renderDocs(); renderTrash(); });
+    const btnDel = document.createElement("button"); btnDel.className="iconBtn"; btnDel.textContent="❌"; btnDel.title="Apagar permanentemente";
+    btnDel.addEventListener("click", ()=>{ confirm("Apagar permanentemente '" + item.titulo + "'?").then(ok=>{ if(!ok) return; trash = trash.filter(x=>x.id!==item.id); saveAll(); renderTrash(); }); });
+    actions.appendChild(btnRestore); actions.appendChild(btnDel);
+    d.appendChild(t); d.appendChild(actions);
+    trashList.appendChild(d);
+  });
+  if(trash.length === 0){
+    trashList.innerHTML = "<div style='color:#777;padding:8px'>Lixeira vazia</div>";
+  }
+}
+
+// abrir documento
+function openDocById(id){
+  const doc = docs.find(d=>d.id===id);
+  if(!doc) return;
+  current = doc.id;
+  editor.innerHTML = doc.conteudo || "<p></p>";
+  status.textContent = "Editando: " + doc.titulo;
+  // coloca o documento no topo da lista (recente)
+  docs = docs.filter(d=>d.id!==doc.id);
+  docs.unshift(doc);
+  renderDocs();
+  saveAll();
+  placeCaretToStart(editor);
+}
+
+// helper: coloca caret no início
+function placeCaretToStart(el){
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(true);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+// aplica comando da toolbar
+document.querySelectorAll('[data-cmd]').forEach(btn=>{
+  btn.addEventListener('click', ()=> {
+    const cmd = btn.getAttribute('data-cmd');
+    document.execCommand(cmd, false, null);
+    editor.focus();
+    updateToolbarState();
+  });
+});
+
+fontSizeSelect.addEventListener('change', ()=>{
+  const val = fontSizeSelect.value;
+  document.execCommand('fontSize', false, val);
+  editor.focus();
+});
+
+// estado visual dos botões (negrito/itálico ...)
+function updateToolbarState(){
+  const bold = document.queryCommandState('bold');
+  const italic = document.queryCommandState('italic');
+  const underline = document.queryCommandState('underline');
+  document.querySelector('[data-cmd="bold"]').classList.toggle('active', bold);
+  document.querySelector('[data-cmd="italic"]').classList.toggle('active', italic);
+  document.querySelector('[data-cmd="underline"]').classList.toggle('active', underline);
+}
+
+// auto save on input
+let autoSaveTimer = null;
+editor.addEventListener('input', ()=>{
+  if(!current){
+    // se não tiver documento atual, cria um temporário automático
+    createDoc("Novo documento", editor.innerHTML);
+    return;
+  }
+  const doc = docs.find(d=>d.id===current);
+  if(doc){
+    doc.conteudo = editor.innerHTML;
+  }
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(()=>{ saveAll(); }, 700);
+  updateToolbarState();
+});
+
+// atalhos de teclado para bold/italic/underline
+document.addEventListener('keydown', (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveAll(); flashSave(); }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='b'){ e.preventDefault(); document.execCommand('bold'); updateToolbarState(); }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='i'){ e.preventDefault(); document.execCommand('italic'); updateToolbarState(); }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='u'){ e.preventDefault(); document.execCommand('underline'); updateToolbarState(); }
+});
+
+function flashSave(){
+  saveBtn.textContent = "Salvo ✓";
+  setTimeout(()=> saveBtn.textContent = "Salvar", 900);
+}
+
+// create new doc
+newDocBtn.addEventListener('click', ()=>{
+  createDoc("Novo documento", "<p></p>");
+});
+
+// toggle lixeira
+toggleTrashBtn.addEventListener('click', ()=>{
+  trashArea.style.display = trashArea.style.display === "none" ? "block" : "none";
+});
+
+// salvar manual
+saveBtn.addEventListener('click', ()=> { saveAll(); flashSave(); });
+
+// download o HTML do documento atual
+downloadBtn.addEventListener('click', ()=>{
+  if(!current){ alert("Abra um documento antes de baixar."); return; }
+  const doc = docs.find(d=>d.id===current);
+  const blob = new Blob([`<!doctype html><meta charset="utf-8"><title>${doc.titulo}</title>${doc.conteudo}`], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = (doc.titulo||"documento") + ".html";
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+// esvaziar lixeira
+document.getElementById('emptyTrash').addEventListener('click', ()=>{
+  confirm("Esvaziar a lixeira? Isso apagará tudo permanentemente.").then(ok=>{
+    if(!ok) return;
+    trash = []; saveAll(); renderTrash();
+  });
+});
+
+// confirmação modal (retorna Promise)
+function confirm(text){
+  confirmText.textContent = text;
+  confirmModal.style.display = "flex";
+  confirmModal.setAttribute('aria-hidden','false');
+  return new Promise(resolve=>{
+    confirmResolve = resolve;
+  });
+}
+confirmCancel.addEventListener('click', ()=> { confirmModal.style.display = 'none'; confirmModal.setAttribute('aria-hidden','true'); confirmResolve(false); });
+confirmOk.addEventListener('click', ()=> { confirmModal.style.display = 'none'; confirmModal.setAttribute('aria-hidden','true'); confirmResolve(true); });
+
+// persistência inicial
+function init(){
+  renderDocs();
+  renderTrash();
+  if(docs.length>0){
+    openDocById(docs[0].id);
+  } else {
+    // cria um documento padrão pra evitar comportamento estranho
+    createDoc("Documento 1", "<p>Comece aqui...</p>");
+  }
+  // tenta manter caret/seleção ao recarregar
+  updateToolbarState();
+  // salva antes de fechar
+  window.addEventListener('beforeunload', ()=> { saveAll(); });
+}
+init();
+
+/* pequenas utils: quando abrir um doc que contenha apenas <br> ou vazio, coloca um parágrafo vazio */
+editor.addEventListener('focus', ()=>{
+  if(!editor.innerHTML || editor.innerHTML.trim()==="<br>") editor.innerHTML = "<p></p>";
+});
+
+</script>
+</body>
+</html>
